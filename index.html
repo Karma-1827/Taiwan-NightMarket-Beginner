@@ -116,6 +116,42 @@
             cursor: pointer;
             font-size: 1em;
         }
+
+        /* 配對成功的中間彈窗 */
+        #match-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.4);
+            text-align: center;
+            z-index: 200;
+            border: 6px solid #ffcc00;
+            width: 280px;
+        }
+        
+        #match-popup img {
+            width: 180px;
+            height: 180px;
+            object-fit: contain;
+            margin-bottom: 15px;
+        }
+
+        .popup-word {
+            font-size: 2.2em;
+            font-weight: bold;
+            color: #d32f2f;
+            margin: 5px 0;
+        }
+        
+        .popup-pinyin {
+            font-size: 1.1em;
+            color: #555;
+        }
     </style>
 </head>
 <body>
@@ -132,6 +168,12 @@
     <div id="feedback-modal">
         <h2 id="feedback-text">太棒了！</h2>
         <button onclick="resetGame()">再玩一次</button>
+    </div>
+
+    <div id="match-popup">
+        <img id="popup-img" src="" alt="match">
+        <div id="popup-word" class="popup-word"></div>
+        <div id="popup-pinyin" class="popup-pinyin"></div>
     </div>
 
     <script>
@@ -190,20 +232,39 @@
             }
         }
 
+        let isLocked = false; // 新增鎖定狀態，防止 5 秒內亂點
         function checkMatch() {
             const [card1, card2] = flippedCards;
             const isMatch = card1.dataset.id === card2.dataset.id;
-
+        
             if (isMatch) {
+                isLocked = true; // 鎖定螢幕
                 card1.classList.add('matched');
                 card2.classList.add('matched');
-                speak(card1.dataset.name); // 配對成功唸出生詞
-                flippedCards = [];
-                matchedCount++;
-
-                if (matchedCount === items.length) {
-                    setTimeout(showWinMessage, 1000);
-                }
+        
+                // 取得該生詞的資料
+                const itemData = items.find(it => it.id == card1.dataset.id);
+                
+                // 顯示彈窗內容
+                const popup = document.getElementById('match-popup');
+                document.getElementById('popup-img').src = itemData.img;
+                document.getElementById('popup-word').innerText = itemData.name;
+                document.getElementById('popup-pinyin').innerText = itemData.pinyin;
+                
+                popup.style.display = 'block';
+                speak(itemData.name); // 播放聲音
+        
+                // 5 秒後自動關閉彈窗並解除鎖定
+                setTimeout(() => {
+                    popup.style.display = 'none';
+                    isLocked = false;
+                    flippedCards = [];
+                    matchedCount++;
+                    if (matchedCount === items.length) {
+                        setTimeout(showWinMessage, 500);
+                    }
+                }, 5000);
+        
             } else {
                 setTimeout(() => {
                     card1.classList.remove('flipped');
@@ -212,6 +273,11 @@
                 }, 1000);
             }
         }
+        
+        // 記得在 flipCard 函數最開頭加上判斷
+        function flipCard(card) {
+            if (isLocked) return; // 如果正在顯示 5 秒彈窗，不准翻牌
+            // ... 原本的程式碼內容
 
         function speak(text) {
             const synth = window.speechSynthesis;
