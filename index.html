@@ -6,8 +6,8 @@
     <title>夜市對對碰 - 華語學習遊戲</title>
     <style>
         :root {
-            --bg-color: #fdf5e6; /* 暖黃色背景 */
-            --card-back: #b22222; /* 深紅色卡背 */
+            --bg-color: #fdf5e6;
+            --card-back: #b22222;
             --card-front: #ffffff;
             --text-color: #3e2723;
         }
@@ -24,9 +24,8 @@
         }
 
         h1 { color: #8b0000; margin-bottom: 10px; }
-        .instructions { margin-bottom: 20px; font-size: 1.1em; text-align: center;}
+        .instructions { margin-bottom: 20px; font-size: 1.1em; text-align: center; line-height: 1.6;}
 
-        /* 遊戲區域佈局 */
         .game-container {
             display: grid;
             grid-template-columns: repeat(5, 120px);
@@ -38,7 +37,6 @@
             .game-container { grid-template-columns: repeat(3, 100px); }
         }
 
-        /* 卡片設計 */
         .card {
             width: 120px;
             height: 150px;
@@ -65,14 +63,12 @@
             border: 2px solid #d32f2f;
         }
 
-        /* 卡片背面（紅色窗花感） */
         .card-back {
             background-color: var(--card-back);
             background-image: radial-gradient(circle, #d32f2f 10%, transparent 10%);
             background-size: 20px 20px;
         }
 
-        /* 卡片正面 */
         .card-front {
             background-color: var(--card-front);
             transform: rotateY(180deg);
@@ -90,7 +86,6 @@
         .card-front .word { font-size: 1.2em; font-weight: bold; margin-top: 5px; }
         .card-front .pinyin { font-size: 0.9em; color: #666; }
 
-        /* 回饋彈窗 */
         #feedback-modal {
             display: none;
             position: fixed;
@@ -115,9 +110,9 @@
             border-radius: 5px;
             cursor: pointer;
             font-size: 1em;
+            margin-top: 10px;
         }
 
-        /* 配對成功的中間彈窗 */
         #match-popup {
             display: none;
             position: fixed;
@@ -162,18 +157,17 @@
         Please match the "images" with the correct "vocabulary".
     </p>
 
-    <div class="game-container" id="game-board">
-        </div>
-
-    <div id="feedback-modal">
-        <h2 id="feedback-text">太棒了！</h2>
-        <button onclick="resetGame()">再玩一次</button>
-    </div>
+    <div class="game-container" id="game-board"></div>
 
     <div id="match-popup">
         <img id="popup-img" src="" alt="match">
         <div id="popup-word" class="popup-word"></div>
         <div id="popup-pinyin" class="popup-pinyin"></div>
+    </div>
+
+    <div id="feedback-modal">
+        <h2 id="feedback-text">太棒了！</h2>
+        <button onclick="resetGame()">再玩一次</button>
     </div>
 
     <script>
@@ -185,23 +179,23 @@
             { id: 5, name: '珍珠奶茶', pinyin: 'zhēn zhū nǎi chá', img: 'https://i.postimg.cc/85khLNtR/34.jpg' }
         ];
 
-        let cards = [];
         let flippedCards = [];
         let matchedCount = 0;
+        let isLocked = false; 
 
         function initGame() {
             const board = document.getElementById('game-board');
             board.innerHTML = '';
             matchedCount = 0;
             flippedCards = [];
+            isLocked = false;
             
-            // 建立 5 組（10張卡片）：一半是圖片，一半是文字
             const cardData = [
                 ...items.map(item => ({ ...item, type: 'img' })),
                 ...items.map(item => ({ ...item, type: 'text' }))
             ].sort(() => Math.random() - 0.5);
 
-            cardData.forEach((data, index) => {
+            cardData.forEach((data) => {
                 const card = document.createElement('div');
                 card.classList.add('card');
                 card.dataset.id = data.id;
@@ -222,6 +216,7 @@
         }
 
         function flipCard(card) {
+            if (isLocked) return; 
             if (flippedCards.length < 2 && !card.classList.contains('flipped') && !card.classList.contains('matched')) {
                 card.classList.add('flipped');
                 flippedCards.push(card);
@@ -232,29 +227,25 @@
             }
         }
 
-        let isLocked = false; // 新增鎖定狀態，防止 5 秒內亂點
         function checkMatch() {
             const [card1, card2] = flippedCards;
             const isMatch = card1.dataset.id === card2.dataset.id;
         
             if (isMatch) {
-                isLocked = true; // 鎖定螢幕
+                isLocked = true; 
                 card1.classList.add('matched');
                 card2.classList.add('matched');
         
-                // 取得該生詞的資料
                 const itemData = items.find(it => it.id == card1.dataset.id);
                 
-                // 顯示彈窗內容
                 const popup = document.getElementById('match-popup');
                 document.getElementById('popup-img').src = itemData.img;
                 document.getElementById('popup-word').innerText = itemData.name;
                 document.getElementById('popup-pinyin').innerText = itemData.pinyin;
                 
                 popup.style.display = 'block';
-                speak(itemData.name); // 播放聲音
+                speak(itemData.name); 
         
-                // 5 秒後自動關閉彈窗並解除鎖定
                 setTimeout(() => {
                     popup.style.display = 'none';
                     isLocked = false;
@@ -266,18 +257,15 @@
                 }, 5000);
         
             } else {
+                isLocked = true;
                 setTimeout(() => {
                     card1.classList.remove('flipped');
                     card2.classList.remove('flipped');
                     flippedCards = [];
+                    isLocked = false;
                 }, 1000);
             }
         }
-        
-        // 記得在 flipCard 函數最開頭加上判斷
-        function flipCard(card) {
-            if (isLocked) return; // 如果正在顯示 5 秒彈窗，不准翻牌
-            // ... 原本的程式碼內容
 
         function speak(text) {
             const synth = window.speechSynthesis;
@@ -296,7 +284,6 @@
             initGame();
         }
 
-        // 啟動遊戲
         initGame();
     </script>
 </body>
