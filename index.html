@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>夜市點餐對對碰 - 華語學習遊戲</title>
+    <title>夜市對對碰 - 華語學習遊戲</title>
     <style>
         :root {
-            --bg-color: #fdf5e6;
-            --card-back: #b22222;
+            --bg-color: #fdf5e6; /* 暖黃色背景 */
+            --card-back: #b22222; /* 深紅色卡背 */
             --card-front: #ffffff;
             --text-color: #3e2723;
-            --highlight: #ffcc00;
         }
 
         body {
@@ -24,34 +23,25 @@
             color: var(--text-color);
         }
 
-        h1 { color: #8b0000; margin-bottom: 5px; }
-        
-        .instructions { 
-            margin-bottom: 25px; 
-            font-size: 1.2em; 
-            text-align: center;
-            line-height: 1.6;
-        }
-        .instructions span {
-            display: block;
-            font-size: 0.85em;
-            color: #5d4037;
-        }
+        h1 { color: #8b0000; margin-bottom: 10px; }
+        .instructions { margin-bottom: 20px; font-size: 1.1em; }
 
+        /* 遊戲區域佈局 */
         .game-container {
             display: grid;
-            grid-template-columns: repeat(5, 160px); 
-            grid-gap: 20px;
+            grid-template-columns: repeat(5, 120px);
+            grid-gap: 15px;
             perspective: 1000px;
         }
 
-        @media (max-width: 900px) {
-            .game-container { grid-template-columns: repeat(2, 160px); }
+        @media (max-width: 650px) {
+            .game-container { grid-template-columns: repeat(3, 100px); }
         }
 
+        /* 卡片設計 */
         .card {
-            width: 160px;
-            height: 220px;
+            width: 120px;
+            height: 150px;
             position: relative;
             transform-style: preserve-3d;
             transition: transform 0.6s;
@@ -59,7 +49,7 @@
         }
 
         .card.flipped { transform: rotateY(180deg); }
-        .card.matched { cursor: default; opacity: 0.4; }
+        .card.matched { cursor: default; visibility: visible; opacity: 0.8; }
 
         .card-face {
             position: absolute;
@@ -70,17 +60,19 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            border-radius: 15px;
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-            border: 3px solid #d32f2f;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border: 2px solid #d32f2f;
         }
 
+        /* 卡片背面（紅色窗花感） */
         .card-back {
             background-color: var(--card-back);
             background-image: radial-gradient(circle, #d32f2f 10%, transparent 10%);
-            background-size: 25px 25px;
+            background-size: 20px 20px;
         }
 
+        /* 卡片正面 */
         .card-front {
             background-color: var(--card-front);
             transform: rotateY(180deg);
@@ -90,34 +82,16 @@
         }
 
         .card-front img {
-            max-width: 100%;
+            max-width: 90%;
             max-height: 70%;
             object-fit: contain;
         }
 
-        .card-front .word { font-size: 1.5em; font-weight: bold; margin-top: 10px; }
-        .card-front .pinyin { font-size: 1em; color: #666; }
+        .card-front .word { font-size: 1.2em; font-weight: bold; margin-top: 5px; }
+        .card-front .pinyin { font-size: 0.9em; color: #666; }
 
-        #match-popup {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 40px;
-            border-radius: 30px;
-            box-shadow: 0 0 50px rgba(0,0,0,0.5);
-            text-align: center;
-            z-index: 200;
-            border: 8px solid var(--highlight);
-            width: 320px;
-        }
-
-        #match-popup img { width: 180px; height: 180px; object-fit: contain; }
-        #match-popup .popup-word { font-size: 2.5em; font-weight: bold; color: #d32f2f; margin: 10px 0; }
-
-        #win-modal {
+        /* 回饋彈窗 */
+        #feedback-modal {
             display: none;
             position: fixed;
             top: 50%;
@@ -126,19 +100,21 @@
             background: white;
             padding: 30px;
             border-radius: 20px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
             text-align: center;
             z-index: 100;
             border: 5px solid #ffcc00;
         }
 
+        #feedback-modal h2 { color: #d32f2f; font-size: 2em; }
         button {
             background: #d32f2f;
             color: white;
             border: none;
-            padding: 15px 30px;
-            border-radius: 8px;
+            padding: 10px 20px;
+            border-radius: 5px;
             cursor: pointer;
-            font-size: 1.2em;
+            font-size: 1em;
         }
     </style>
 </head>
@@ -146,54 +122,48 @@
 
     <h1>🏮 臺灣夜市對對碰 🏮</h1>
     <p class="instructions">
-        請將「圖片」與正確的「生詞」配對
-        <span>Please match the "images" with the correct "vocabulary".</span>
+        請將「圖片」與正確的「生詞」配對<br>
+        Please match the "images" with the correct "vocabulary".
     </p>
 
-    <div class="game-container" id="game-board"></div>
+    <div class="game-container" id="game-board">
+        </div>
 
-    <div id="match-popup">
-        <img id="popup-img" src="" alt="">
-        <div id="popup-word" class="popup-word"></div>
-        <div id="popup-pinyin" style="font-size: 1.2em; color: #555;"></div>
-    </div>
-
-    <div id="win-modal">
-        <h2>太棒了！</h2>
+    <div id="feedback-modal">
+        <h2 id="feedback-text">太棒了！</h2>
         <button onclick="resetGame()">再玩一次</button>
     </div>
 
     <script>
-        [cite_start]// 使用您的教材資料 [cite: 72-76, 92-95]
-        // 註：img 路徑請確保您的資料夾中有對應檔案，或暫時使用網址測試
         const items = [
-            { id: 1, name: '夜市', pinyin: 'yè shì', img: 'https://placehold.jp/40/8b0000/ffffff/200x200.png?text=夜市' },
-            { id: 2, name: '小吃', pinyin: 'xiǎo chī', img: 'https://placehold.jp/40/8b0000/ffffff/200x200.png?text=小吃' },
-            { id: 3, name: '老闆', pinyin: 'lǎo bǎn', img: 'https://placehold.jp/40/8b0000/ffffff/200x200.png?text=老闆' },
-            { id: 4, name: '雞排', pinyin: 'jī pái', img: 'https://placehold.jp/40/8b0000/ffffff/200x200.png?text=雞排' },
-            { id: 5, name: '珍珠奶茶', pinyin: 'zhēn zhū nǎi chá', img: 'https://placehold.jp/40/8b0000/ffffff/200x200.png?text=珍奶' }
+            { id: 1, name: '夜市', pinyin: 'yè shì', img: 'https://i.postimg.cc/TYBqB83g/20230921093117-b34ba6ac-me.jpg' },
+            { id: 2, name: '小吃', pinyin: 'xiǎo chī', img: 'https://i.postimg.cc/1X2wx6Pd/00000_12.jpg' },
+            { id: 3, name: '老闆', pinyin: 'lǎo bǎn', img: 'https://i.postimg.cc/xCg3ZcX2/xia-zai.jpg' },
+            { id: 4, name: '雞排', pinyin: 'jī pái', img: 'https://i.postimg.cc/D0yBf194/b193016e7b200014.jpg' },
+            { id: 5, name: '珍珠奶茶', pinyin: 'zhēn zhū nǎi chá', img: 'https://i.postimg.cc/85khLNtR/34.jpg' }
         ];
 
+        let cards = [];
         let flippedCards = [];
         let matchedCount = 0;
-        let isProcessing = false;
 
         function initGame() {
             const board = document.getElementById('game-board');
             board.innerHTML = '';
             matchedCount = 0;
             flippedCards = [];
-            isProcessing = false;
             
+            // 建立 5 組（10張卡片）：一半是圖片，一半是文字
             const cardData = [
                 ...items.map(item => ({ ...item, type: 'img' })),
                 ...items.map(item => ({ ...item, type: 'text' }))
             ].sort(() => Math.random() - 0.5);
 
-            cardData.forEach(data => {
+            cardData.forEach((data, index) => {
                 const card = document.createElement('div');
                 card.classList.add('card');
                 card.dataset.id = data.id;
+                card.dataset.name = data.name;
                 
                 card.innerHTML = `
                     <div class="card-face card-back"></div>
@@ -204,69 +174,63 @@
                     </div>
                 `;
                 
-                card.addEventListener('click', () => {
-                    if (isProcessing) return;
-                    if (!card.classList.contains('flipped') && !card.classList.contains('matched')) {
-                        card.classList.add('flipped');
-                        flippedCards.push({ card, data });
-                        if (flippedCards.length === 2) checkMatch();
-                    }
-                });
+                card.addEventListener('click', () => flipCard(card));
                 board.appendChild(card);
             });
         }
 
-        function checkMatch() {
-            const [c1, c2] = flippedCards;
-            if (c1.card.dataset.id === c2.card.dataset.id) {
-                isProcessing = true;
-                c1.card.classList.add('matched');
-                c2.card.classList.add('matched');
-                
-                // 顯示回饋視窗 (5秒)
-                const info = c1.data;
-                const popup = document.getElementById('match-popup');
-                document.getElementById('popup-img').src = info.img;
-                document.getElementById('popup-word').innerText = info.name;
-                document.getElementById('popup-pinyin').innerText = info.pinyin;
-                
-                popup.style.display = 'block';
-                speak(info.name);
+        function flipCard(card) {
+            if (flippedCards.length < 2 && !card.classList.contains('flipped') && !card.classList.contains('matched')) {
+                card.classList.add('flipped');
+                flippedCards.push(card);
 
-                setTimeout(() => {
-                    popup.style.display = 'none';
-                    isProcessing = false;
-                    matchedCount++;
-                    if (matchedCount === items.length) showWinMessage();
-                }, 5000);
+                if (flippedCards.length === 2) {
+                    checkMatch();
+                }
+            }
+        }
+
+        function checkMatch() {
+            const [card1, card2] = flippedCards;
+            const isMatch = card1.dataset.id === card2.dataset.id;
+
+            if (isMatch) {
+                card1.classList.add('matched');
+                card2.classList.add('matched');
+                speak(card1.dataset.name); // 配對成功唸出生詞
                 flippedCards = [];
+                matchedCount++;
+
+                if (matchedCount === items.length) {
+                    setTimeout(showWinMessage, 1000);
+                }
             } else {
-                isProcessing = true;
                 setTimeout(() => {
-                    c1.card.classList.remove('flipped');
-                    c2.card.classList.remove('flipped');
+                    card1.classList.remove('flipped');
+                    card2.classList.remove('flipped');
                     flippedCards = [];
-                    isProcessing = false;
                 }, 1000);
             }
         }
 
         function speak(text) {
-            const msg = new SpeechSynthesisUtterance(text);
-            msg.lang = 'zh-TW';
-            window.speechSynthesis.speak(msg);
+            const synth = window.speechSynthesis;
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.lang = 'zh-TW';
+            synth.speak(utter);
         }
 
         function showWinMessage() {
-            document.getElementById('win-modal').style.display = 'block';
+            document.getElementById('feedback-modal').style.display = 'block';
             speak("太棒了！");
         }
 
         function resetGame() {
-            document.getElementById('win-modal').style.display = 'none';
+            document.getElementById('feedback-modal').style.display = 'none';
             initGame();
         }
 
+        // 啟動遊戲
         initGame();
     </script>
 </body>
